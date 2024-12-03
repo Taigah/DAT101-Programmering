@@ -84,7 +84,7 @@ printOut(newLine);
 printOut("--- Part 7 ----------------------------------------------------------------------------------------------");
 /* Put your code below here!*/
 
-const eWeekdays = {
+const eWeekDays = {
     WeekDay1: {value: 0x01, name: "Mandag"},
     WeekDay2: {value: 0x02, name: "Tirsdag"},
     WeekDay3: {value: 0x04, name: "Onsdag"},
@@ -96,17 +96,42 @@ const eWeekdays = {
     Weekends: {value: 0x20 + 0x40, name: "Helg"}
 };
 
-printOut("Replace this with you answer!");
+let text = "";
+Object.keys(eWeekDays).forEach(key => {
+    let day = eWeekDays[key]; // Get the object for each key
+    printOut(`Name: ${day.name}, Value: ${day.value}`);
+});
+
 printOut(newLine);
 
 printOut("--- Part 8 ----------------------------------------------------------------------------------------------");
 /* Put your code below here!*/
-printOut("Replace this with you answer!");
+
+let randomNumberArray = []
+for (let o = 0; o < 35; o++) { 
+    randomNumberArray.push(Math.floor(Math.random() * 20)+1)
+}
+
+printOut("Ascending: " + randomNumberArray.sort(function(a, b){return a - b}));
+printOut("Descending: " + randomNumberArray.sort(function(a, b){return b - a}));
+
 printOut(newLine);
 
 printOut("--- Part 9 ----------------------------------------------------------------------------------------------");
 /* Put your code below here!*/
-printOut("Replace this with you answer!");
+
+function numberFrequency(array) {
+    const frequency = {};
+    array.forEach(item => {
+        frequency[item] = (frequency[item] || 0) +1;
+    });
+    return frequency;
+}
+
+const frequencyTest = numberFrequency(randomNumberArray);
+console.log(frequencyTest);
+printOut(frequencyTest.toString());
+
 printOut(newLine);
 
 /* Task 10*/
