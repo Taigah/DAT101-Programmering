@@ -70,7 +70,7 @@ class TBook {
         this.aISBN = aISBN
     }
     toString() {
-        return ("Title: " + this.aTitle + " , Author: " + this.aAuthor + " , ISBN: " + this.aISBN);
+        return ("Title: " + this.aTitle + " | Author: " + this.aAuthor + " | ISBN: " + this.aISBN);
     }
 }
 const TBookOne = new TBook("Harry Potter and the Philosopher's Stone", "J. K. Rowling", "978-0-7475-3269-9");
@@ -107,7 +107,7 @@ printOut(newLine);
 printOut("--- Part 8 ----------------------------------------------------------------------------------------------");
 /* Put your code below here!*/
 
-let randomNumberArray = []
+let randomNumberArray = [];
 for (let o = 0; o < 35; o++) { 
     randomNumberArray.push(Math.floor(Math.random() * 20)+1)
 }
