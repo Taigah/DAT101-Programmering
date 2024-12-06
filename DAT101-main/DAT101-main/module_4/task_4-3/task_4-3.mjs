@@ -107,8 +107,46 @@ function cmbTask3CheckAnswerClick() {
 //--- Part 4 ----------------------------------------------------------------------------------------------
 /* Put your code below here!*/
 
+const carButton = document.getElementById("divTask4Cars");
+carButton.addEventListener("click", carButtonClick);
+const txtTask4Output = document.getElementById("txtTask4Output");
+
+function carButtonClick(value, caption) {
+  let label = document.createElement("LABEL");
+  let radioButton = document.createElement("INPUT");
+  radioButton.value = value
+  radioButton.caption = caption
+  radioButton.setAttribute("type", "radio");
+  label.appendChild(radioButton);
+  label.appendChild(document.createTextNode(caption));
+  return label
+}
+
+text = "";
+for (let i = 0; i < CarTypes.length; i++) {
+  const button = carButtonClick(CarTypes[i].value, CarTypes[i].caption);
+  const query = button.querySelector("INPUT");
+  button.addEventListener("click", ()=>{
+    const caption = query.caption
+    txtTask4Output.innerHTML = "You choose " + caption + ".<br / >"
+  })
+  txtTask4Output.appendChild(button);
+  txtTask4Output.appendChild(document.createElement("br"));
+}
+
 //--- Part 5 ----------------------------------------------------------------------------------------------
 /* Put your code below here!*/
+
+
+selectTask5Animals.addEventListener("click", selectTask5AnimalsClick);
+const txtTask5Output = document.getElementById("txtTask5Output");
+
+text = "";
+function selectTask5AnimalsClick () {
+  let selectTask5Animals = document.getElementById("selectTask5Animals").value;
+  txtTask5Output.innerHTML = "You selected " + selectTask5Animals;
+}
+text = "";
 
 //--- Part 6 ----------------------------------------------------------------------------------------------
 /* Put your code below here!*/
