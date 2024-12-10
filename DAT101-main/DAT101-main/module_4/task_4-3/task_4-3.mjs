@@ -69,6 +69,7 @@ function cmbTask1CalculateClick() {
 
 const txtTask2Word = document.getElementById("txtTask2Word");
 txtTask2Word.addEventListener("keypress", txtTask2WordKeyPress);
+const txtTask2Output = document.getElementById("txtTask2Output");
 let task2Words = [];
 function txtTask2WordKeyPress(aEvent) {
   const key = aEvent.key;
@@ -137,19 +138,62 @@ for (let i = 0; i < CarTypes.length; i++) {
 //--- Part 5 ----------------------------------------------------------------------------------------------
 /* Put your code below here!*/
 
-
-selectTask5Animals.addEventListener("click", selectTask5AnimalsClick);
-const txtTask5Output = document.getElementById("txtTask5Output");
+let selectTask5Animals = document.getElementById("selectTask5Animals");
+selectTask5Animals.addEventListener("change", selectTask5AnimalsClick);
+let txtTask5Output = document.getElementById("txtTask5Output");
 
 text = "";
 function selectTask5AnimalsClick () {
-  let selectTask5Animals = document.getElementById("selectTask5Animals").value;
-  txtTask5Output.innerHTML = "You selected " + selectTask5Animals;
+  let selectedOption = selectTask5Animals.options[selectTask5Animals.selectedIndex];
+  let optionText = selectedOption.textContent;  // Get the text of the selected option
+  txtTask5Output.innerHTML = "You selected " + optionText;  // Display the animal name
 }
 text = "";
 
 //--- Part 6 ----------------------------------------------------------------------------------------------
 /* Put your code below here!*/
 
+const selectTask6Girls = document.getElementById("selectTask6Girls");
+selectTask6Girls.addEventListener("change", selectTask6GirlsChange);
+const txtTask6Output = document.getElementById("txtTask6Output");
+
+function populateDropdown() {
+  for (let i = 0; i < GirlsNames.length; i++) {
+    let option = GirlsNames[i];
+    let element = document.createElement("option");
+    element.textContent = option;
+    element.value = option;
+    selectTask6Girls.appendChild(element);
+  }
+}
+
+function selectTask6GirlsChange() {
+  let nameOption = selectTask6Girls.options[selectTask6Girls.selectedIndex];
+  let nameText = nameOption.textContent;
+  txtTask6Output.innerHTML = "You selected: " + nameText;
+}
+
+populateDropdown();
+
 //--- Part 7 ----------------------------------------------------------------------------------------------
 /* Put your code below here!*/
+
+const selectMovieGenre = document.getElementById("selectMovieGenre");
+
+function populateDropdownMovies() {
+  for (let i = 0; i < MovieGenre.length; i++) {
+    let option = MovieGenre[i];
+    let element = document.createElement("option");
+    element.textContent = option;
+    element.value = option;
+    selectMovieGenre.appendChild(element);
+  }
+}
+
+populateDropdownMovies();
+
+const txtMovieTitle = document.getElementById("txtMovieTitle");
+const txtMovieDirector = document.getElementById("txtMovieDirector");
+let moveTitle = [];
+let movieDirector = [];
+let tblMovies = document.getElementById("tblMovies");
