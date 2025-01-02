@@ -178,22 +178,68 @@ populateDropdown();
 //--- Part 7 ----------------------------------------------------------------------------------------------
 /* Put your code below here!*/
 
-const selectMovieGenre = document.getElementById("selectMovieGenre");
+// const selectMovieGenre = document.getElementById("selectMovieGenre");
 
-function populateDropdownMovies() {
-  for (let i = 0; i < MovieGenre.length; i++) {
-    let option = MovieGenre[i];
-    let element = document.createElement("option");
-    element.textContent = option;
-    element.value = option;
-    selectMovieGenre.appendChild(element);
-  }
-}
+// function populateDropdownMovies() {
+//   for (let i = 0; i < MovieGenre.length; i++) {
+//     let option = MovieGenre[i];
+//     let element = document.createElement("option");
+//     element.textContent = option;
+//     element.value = option;
+//     selectMovieGenre.appendChild(element);
+//   }
+// }
 
-populateDropdownMovies();
+// populateDropdownMovies();
 
-const txtMovieTitle = document.getElementById("txtMovieTitle");
-const txtMovieDirector = document.getElementById("txtMovieDirector");
-let moveTitle = [];
-let movieDirector = [];
-let tblMovies = document.getElementById("tblMovies");
+// const txtMovieTitle = document.getElementById("txtMovieTitle");
+// const txtMovieDirector = document.getElementById("txtMovieDirector");
+// let moveTitle = [];
+// let movieDirector = [];
+// let tblMovies = document.getElementById("tblMovies");
+
+// Populate the Genre dropdown
+const selectMovieGenre = document.getElementById('selectMovieGenre');
+MovieGenre.forEach((genre) => {
+  const option = document.createElement('option');
+  option.value = genre;
+  option.textContent = genre;
+  selectMovieGenre.appendChild(option);
+});
+
+// Add movie to the table when the button is clicked
+document.getElementById('cmbAddMovie').addEventListener('click', function() {
+  // Get values from the input fields
+  const movieTitle = document.getElementById('txtMovieTitle').value;
+  const movieGenre = selectMovieGenre.value;
+  const movieDirector = document.getElementById('txtMovieDirector').value;
+  const movieRate = document.getElementById('txtMovieRate').value;
+
+  // Get the table where movies are displayed
+  const movieTable = document.getElementById('tblMovies');
+
+  // Create a new row for the table
+  const newRow = movieTable.insertRow();
+  
+  // Insert the columns for the new row
+  const cellNr = newRow.insertCell(0);
+  const cellTitle = newRow.insertCell(1);
+  const cellGenre = newRow.insertCell(2);
+  const cellDirector = newRow.insertCell(3);
+  const cellRate = newRow.insertCell(4);
+
+  // Get the current number of rows in the table to set the row number (starting from 1)
+  const rowCount = movieTable.rows.length; // Includes header row, so it's the row number
+  
+  // Fill the new row with data from the form
+  cellNr.textContent = rowCount; // Display the movie number (row number)
+  cellTitle.textContent = movieTitle;
+  cellGenre.textContent = movieGenre;
+  cellDirector.textContent = movieDirector;
+  cellRate.textContent = movieRate;
+
+  // Clear the input fields after adding the movie
+  document.getElementById('txtMovieTitle').value = '';
+  document.getElementById('txtMovieDirector').value = '';
+  document.getElementById('txtMovieRate').value = 5;  // Reset to default value
+});
