@@ -120,22 +120,68 @@ printOut(newLine);
 printOut("--- Part 9 ----------------------------------------------------------------------------------------------");
 /* Put your code below here!*/
 
-function numberFrequency(array) {
-    const frequency = {};
-    array.forEach(item => {
-        frequency[item] = (frequency[item] || 0) +1;
-    });
-    return frequency;
+// Dette funket jo tydelig ikke, men tror jeg var inne på noe. Tror jeg fant ut på nettet at man kunne gjøre dette på flere forskjellige måter, men klarte ikke helt å få det til på denne måten
+
+// function numberFrequency(array) {
+//     const frequency = {};
+//     array.forEach(item => {
+//         frequency[item] = (frequency[item] || 0) +1;
+//     });
+//     return frequency;
+// }
+
+const freq = {};
+for(let i = 0; i < randomNumberArray.length; i++){
+  const value = randomNumberArray[i];
+  if(freq[value]){
+    freq[value]++;
+  }else{
+    freq[value] = 1;
+  }
 }
 
-const frequencyTest = numberFrequency(randomNumberArray);
-console.log(frequencyTest);
-printOut(frequencyTest.toString());
+let freqKeys = Object.keys(freq);
+freqKeys.sort(sortFreq);
+
+function sortFreq(aValue1, aValue2){
+  const freq1 = freq[aValue1];
+  const freq2 = freq[aValue2];
+  return freq2 - freq1;
+}
+
+text = ""; 
+for(let i = 0; i < freqKeys.length; i++){
+  const freqKey = freqKeys[i]; 
+  const freqValue = freq[freqKey];
+  text += freqKey + ": " + freqValue + ", ";
+}
+printOut(text);
 
 printOut(newLine);
 
 /* Task 10*/
 printOut("--- Part 10 ---------------------------------------------------------------------------------------------");
 /* Put your code below here!*/
-printOut("Replace this with you answer!");
+
+const myTable = [];
+for(let row = 0; row < 5; row++){
+  const columns = [];
+  for(let column = 0; column < 9; column++){
+    const cell = + row + "," + column;
+    columns.push(cell);
+  }
+  myTable.push(columns);
+}
+
+text = ""; 
+for(let row = 0; row < myTable.length; row++){
+  const columns = myTable[row];
+  for(let column = 0; column < columns.length; column++){
+    const cell = columns[column]; 
+    text += "[" + cell + "]"; 
+  }
+  printOut(text);
+  text = ""; 
+}
+
 printOut(newLine);

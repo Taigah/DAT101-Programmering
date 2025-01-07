@@ -10,8 +10,36 @@
       <span id="txtOut" style="white-space: nowrap"></span>
     </div>
     <ol>
-      <li>[Write the question here, and copy this for more questions]</li>
-      <p>[Write your answer here, and copy this for more answers]</p>
+      <li>1. What is an array? A short and concise answer is expected here!
+        2. What does it mean to "hardcode" when we talk about programming? (In English, it's called "hard
+        coding", "hard-coding", or "hardcoding").
+        3. Explain in plain text what happens in task 3, and how we can traverse (iterate) the array when we
+        (humans) don't "know" how long the array is.
+        4. Why is it beneficial to store instances of a class in arrays, as in task 4?
+        5. Try your best to explain the EWeekDays object from task 7. How do we use the "value" attribute, for
+        example? In what way do "WeekDay", "Workdays", and "Weekends" differ from each other? If we
+        wanted to create a new element "WorkoutDays", which would contain "Monday", "Wednesday", and
+        "Thursday", how would it ideally look? (I will choose the best answer to this task and reward it with
+        pizza in the cafeteria right after New Year. Remember to mark in your submission if you want to
+        participate in the competition!)
+        6. In task 8, we will use a "callback" routine when sorting. Explain how such a "callback" routine works.
+        7. What happens in the sorting routines you have created? Try to explain how the array can figure out
+        if an element should come before or after another. The best way to answer this is to actually print
+        both parameters each time the sorting routine runs.
+        8. In task 10, we will create an array with rows and columns. Explain what the first element of the array
+        contains.</li>
+      <p>1. A data structure that allows you to store multiple values in a single variable
+        2.Hardcoding means putting fixed values directly into the source code of a program, essentialy making them "written in stone". This means they can't easily be changed without modifying the source code itself.
+        3. The sentence is split up and each word becomes a different variable in the new array. We traverse it by looping the array using the length of it which is the number of words in the previous sentence.
+        4. It's a good way to manage a collection of objects and allows for flexibility and access to them.
+        5. We make a variable called "day" and link it to the eWeekDays variable and it's keys. Then we can call upon "day.value" to get the value of a a certain day.
+        They differ from each other in that "Weekday" is 7 different days with different values and names, while "Workdays" and "Weekends" are just a combination of these 7 different days.
+        "WorkoutDays" would look like this:
+        WorkoutDays: {value: 0x01 + 0x03 + 0x04, name: "Treningsdager"}
+        6. It compares two elements (a and b) at a time then sorts them in the order set (ascending, descending, or a custom order). After that it finds the next element to compare against and sorts them again. It will continue like this until it has sorted all the elements.
+        7. In the methods I created it will sort the numbers in both ascending and descending order. Depending on which it is the code is different in the return part. (a - b) for ascending, (b -a) for descending.
+        8. The first element of the array constaint a cell with the number 0,0. This is because it is row 0 and column 0.
+      </p>
     </ol>
     <script type="module" src="./task_4-2.mjs" defer></script>
   </body>
