@@ -3,6 +3,7 @@ import lib2d from "../../common/libs/lib2d.mjs";
 import libSound from "../../common/libs/libSound.mjs";
 import libSprite from "../../common/libs/libSprite.mjs";
 import THero from "./hero.mjs";
+import TObstacle from "./obstacle.mjs";
 
 
 //--------------- Objects and Variables ----------------------------------//
@@ -35,7 +36,8 @@ export const GameProps = {
   speed: 1,
   background: null,
   ground: null,
-  hero: null
+  hero: null,
+  obstacles: [],
 };
 
 //--------------- Functions ----------------------------------------------//
@@ -60,6 +62,8 @@ function loadGame(){
   pos.x = 100;
   pos.y = 100;
   GameProps.hero = new THero(spcvs, SpriteInfoList.hero1, pos);
+
+  spawnObstacle();
   requestAnimationFrame(drawGame);
   setInterval(animateGame, 10);
 }
@@ -67,9 +71,17 @@ function loadGame(){
 function drawGame(){
   spcvs.clearCanvas();
   GameProps.background.draw();
+  drawObstacles();
   GameProps.ground.draw();
   GameProps.hero.draw();
   requestAnimationFrame(drawGame);
+}
+
+function drawObstacles(){
+  for(let i = 0; i < GameProps.obstacles.length; i++){
+    const obstacle = GameProps.obstacles[i];
+    obstacle.draw();
+  }
 }
 
 function animateGame(){
@@ -78,6 +90,26 @@ function animateGame(){
     GameProps.ground.posX = 0;
   }
   GameProps.hero.update();
+  let delObstacleIndex = -1;
+  for(let i = 0; i < GameProps.obstacles.length; i++){
+    const obstacle = GameProps.obstacles[i];
+    obstacle.update();
+    if(obstacle.posX < -100){
+      delObstacleIndex = i;
+    }
+  }
+  if(delObstacleIndex >= 0){
+    GameProps.obstacles.splice(delObstacleIndex, 1);
+  }
+}
+
+function spawnObstacle(){
+  const obstacle = new TObstacle(spcvs, SpriteInfoList.obstacle);
+  GameProps.obstacles.push(obstacle);
+  //Spawn a new obstacle in 2-7 seconds
+  const seconds = Math.ceil(Math.random() * 5) +2;
+  setTimeout(spawnObstacle, seconds * 1000);
+  console.log("Obstacles spawned in " + seconds + " seconds");
 }
 
 //--------------- Event Handlers -----------------------------------------//
