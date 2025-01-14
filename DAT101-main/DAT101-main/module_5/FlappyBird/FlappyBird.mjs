@@ -1,13 +1,15 @@
 "use strict";
+import lib2d from "../../common/libs/lib2d.mjs";
 import libSound from "../../common/libs/libSound.mjs";
 import libSprite from "../../common/libs/libSprite.mjs";
+import THero from "./hero.mjs";
 
 
 //--------------- Objects and Variables ----------------------------------//
 const chkMuteSound = document.getElementById("chkMuteSound");
 const rbDayNight = document.getElementsByName("rbDayNight");
 const cvs = document.getElementById("cvs");
-const spcvs = new libSprite.TSpriteCanvas("cvs");
+const spcvs = new libSprite.TSpriteCanvas(cvs);
 
 // prettier-ignore
 export const SpriteInfoList = {
@@ -30,6 +32,10 @@ export const SpriteInfoList = {
 export const GameProps = {
   soundMuted: false,
   dayTime: true,
+  speed: 1,
+  background: null,
+  ground: null,
+  hero: null
 };
 
 //--------------- Functions ----------------------------------------------//
@@ -44,7 +50,34 @@ function playSound(aSound) {
 
 function loadGame(){
   console.log("Game ready to load");
-  GameProps.background = new libSprite.TSprite(spcvs, SpriteInfoList.background);
+  cvs.width = SpriteInfoList.background.width;
+  cvs.height = SpriteInfoList.background.height;
+
+  let pos = new lib2d.TPosition(0, 0);
+  GameProps.background = new libSprite.TSprite(spcvs, SpriteInfoList.background, pos);
+  pos.y = cvs.height - SpriteInfoList.ground.height;
+  GameProps.ground = new libSprite.TSprite(spcvs, SpriteInfoList.ground, pos);
+  pos.x = 100;
+  pos.y = 100;
+  GameProps.hero = new THero(spcvs, SpriteInfoList.hero1, pos);
+  requestAnimationFrame(drawGame);
+  setInterval(animateGame, 10);
+}
+
+function drawGame(){
+  spcvs.clearCanvas();
+  GameProps.background.draw();
+  GameProps.ground.draw();
+  GameProps.hero.draw();
+  requestAnimationFrame(drawGame);
+}
+
+function animateGame(){
+  GameProps.ground.translate(-GameProps.speed, 0);
+  if(GameProps.ground.posX <= -SpriteInfoList.background.width){
+    GameProps.ground.posX = 0;
+  }
+  GameProps.hero.update();
 }
 
 //--------------- Event Handlers -----------------------------------------//
@@ -69,6 +102,14 @@ function setDayNight() {
   }
 } // end of setDayNight
 
+function onKeyDown(aEvent){
+  switch(aEvent.code){
+    case "Space":
+      GameProps.hero.flap();
+      break;
+  }
+}
+
 //--------------- Main Code ----------------------------------------------//
 chkMuteSound.addEventListener("change", setSoundOnOff);
 rbDayNight[0].addEventListener("change", setDayNight);
@@ -76,4 +117,4 @@ rbDayNight[1].addEventListener("change", setDayNight);
 
 // Load the sprite sheet
 spcvs.loadSpriteSheet("./Media/FlappyBirdSprites.png", loadGame);
-
+document.addEventListener("keydown", onKeyDown);  
