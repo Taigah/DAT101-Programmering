@@ -18,7 +18,7 @@ class TObstacle {
     top += this.#spi.height + 150;
     const gap = top - groundY - 25;
 
-    top = Math.floor(Math.random() * gap) + groundY -25;
+    top = Math.floor(Math.random() * gap) + groundY - 25;
     pos.y = top;
     this.#lower = new libSprite.TSprite(aSpriteCanvas, aSpriteInfo, pos);
     this.#lower.index = 2;
@@ -30,9 +30,25 @@ class TObstacle {
     this.#lower.draw();
   }
 
-  update() {
-    this.#upper.translate(-1,0);
-    this.#lower.translate(-1,0);
+  update(){
+    this.#upper.translate(-1, 0);
+    this.#lower.translate(-1, 0);
+    const hasCollided = 
+    GameProps.hero.hasCollided(this.#upper) || 
+    GameProps.hero.hasCollided(this.#lower);
+
+    if(hasCollided){
+      GameProps.hero.flap();
+      GameProps.hero.isDead = true;
+    }
+  }
+
+  get right(){
+    return this.#upper.right;
+  }
+
+  get left(){
+    return this.#upper.left;
   }
 
   get posX(){

@@ -34,6 +34,9 @@ class THero extends libSprite.TSprite {
       this.#velocity += this.#gravity;
     } else {
       this.posY = groundY - this.#spi.height;
+      GameProps.status = EGameStatus.gameOver;
+      this.animateSpeed = 0;
+      GameProps.sounds.running.stop();
     }
   }
 

@@ -14,7 +14,7 @@ const cvs = document.getElementById("cvs");
 const spcvs = new libSprite.TSpriteCanvas(cvs);
 
 // prettier-ignore
-export const SpriteInfoList = {
+export const SpriteInfoList = { // pixel info til sprites
   hero1:        { x:    0, y: 545, width:   34, height:  24, count:  4 },
   hero2:        { x:    0, y: 569, width:   34, height:  24, count:  4 },
   hero3:        { x:    0, y: 593, width:   34, height:  24, count:  4 },
@@ -31,7 +31,7 @@ export const SpriteInfoList = {
   medal:        { x:  985, y: 635, width:   44, height:  44, count:  4 },
 };
 
-export const EGameStatus = { idle: 0, getReady: 1, playing: 2, gameOver: 3 };
+export const EGameStatus = { idle: 0, getReady: 1, playing: 2, gameOver: 3 }; // Ulike "faser" spillet kan være i
 
 export const GameProps = {
   soundMuted: false,
@@ -46,7 +46,7 @@ export const GameProps = {
 
 //--------------- Functions ----------------------------------------------//
 
-function playSound(aSound) {
+function playSound(aSound) { // Sjekker om lyden er muted eller ikke og spiller av lyden
   if (!GameProps.soundMuted) {
     aSound.play();
   } else {
@@ -54,7 +54,7 @@ function playSound(aSound) {
   }
 }
 
-function loadGame() {
+function loadGame() { // Laster inn canvaset og alle spirtes for spillet
   console.log("Game ready to load");
   cvs.width = SpriteInfoList.background.width;
   cvs.height = SpriteInfoList.background.height;
@@ -67,12 +67,12 @@ function loadGame() {
   pos.y = 100;
   GameProps.hero = new THero(spcvs, SpriteInfoList.hero1, pos);
 
-  spawnObstacle();
+  spawnObstacle(); // Spawner inn objects
   requestAnimationFrame(drawGame);
   setInterval(animateGame, 10);
 }
 
-function drawGame() {
+function drawGame() { // 
   spcvs.clearCanvas();
   GameProps.background.draw();
   drawBait();
