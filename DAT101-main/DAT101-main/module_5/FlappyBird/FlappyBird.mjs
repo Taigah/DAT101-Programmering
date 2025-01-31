@@ -14,7 +14,7 @@ const cvs = document.getElementById("cvs");
 const spcvs = new libSprite.TSpriteCanvas(cvs);
 
 // prettier-ignore
-export const SpriteInfoList = {
+export const SpriteInfoList = { // Liste over pixel størelse på alle sprites
   hero1:        { x:    0, y: 545, width:   34, height:  24, count:  4 },
   hero2:        { x:    0, y: 569, width:   34, height:  24, count:  4 },
   hero3:        { x:    0, y: 593, width:   34, height:  24, count:  4 },
@@ -31,9 +31,9 @@ export const SpriteInfoList = {
   medal:        { x:  985, y: 635, width:   44, height:  44, count:  4 },
 };
 
-export const EGameStatus = { idle: 0, getReady: 1, playing: 2, gameOver: 3 };
+export const EGameStatus = { idle: 0, getReady: 1, playing: 2, gameOver: 3 }; // "Fasene" spillet kan være i
 
-export const GameProps = {
+export const GameProps = { // Ulike deler av spillet
   soundMuted: false,
   dayTime: true,
   speed: 1,
@@ -75,7 +75,14 @@ function loadGame() {
   GameProps.menu = new TMenu(spcvs);
 
   //Load sounds
-  GameProps.sounds.running = new libSound.TSoundFile("./Media/running.mp3");
+  GameProps.sounds.running = new libSound.TSoundFile("./Media/running.mp3")
+  GameProps.sounds.dead = new libSound.TSoundFile("./Media/heroIsDead.mp3")
+  GameProps.sounds.gameOver = new libSound.TSoundFile("./Media/gameOver.mp3")
+  GameProps.sounds.food = new libSound.TSoundFile("./Media/food.mp3")
+  GameProps.sounds.countDown = new libSound.TSoundFile("./Media/countDown.mp3")
+
+  const gameSounds = [(GameProps.sounds.running),(GameProps.sounds.dead),(GameProps.sounds.gameOver),(GameProps.sounds.food),(GameProps.sounds.countDown)]
+  
 
   requestAnimationFrame(drawGame);
   setInterval(animateGame, 10);
@@ -199,13 +206,16 @@ export function startGame() {
 
 function setSoundOnOff() {
   if (chkMuteSound.checked) {
-    GameProps.soundMuted = true;
-    console.log("Sound muted");
-  } else {
-    GameProps.soundMuted = false;
-    console.log("Sound on");
-  }
-} // end of setSoundOnOff
+      GameProps.sounds.running.pause()
+      GameProps.sounds.dead.pause()
+      GameProps.sounds.gameOver.pause()
+      GameProps.sounds.countDown.pause()
+      GameProps.sounds.food.pause()
+      console.log("Sound is muted");
+    } else {
+      console.log("Sound is on");
+    }
+  } // end of setSoundOnOff
 
 function setDayNight() {
   if (rbDayNight[0].checked) {

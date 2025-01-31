@@ -37,6 +37,8 @@ class THero extends libSprite.TSprite {
       GameProps.status = EGameStatus.gameOver;
       this.animateSpeed = 0;
       GameProps.sounds.running.stop();
+      GameProps.sounds.gameOver.play();
+      GameProps.sounds.dead.play();
     }
   }
 
