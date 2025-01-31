@@ -22,6 +22,7 @@ class TObstacle {
     pos.y = top;
     this.#lower = new libSprite.TSprite(aSpriteCanvas, aSpriteInfo, pos);
     this.#lower.index = 2;
+    this.hasPassed = false;
   }
 
   draw(){
@@ -29,17 +30,9 @@ class TObstacle {
     this.#lower.draw();
   }
 
-  update(){
-    this.#upper.translate(-1, 0);
-    this.#lower.translate(-1, 0);
-    const hasCollided = 
-    GameProps.hero.hasCollided(this.#upper) || 
-    GameProps.hero.hasCollided(this.#lower);
-
-    if(hasCollided){
-      GameProps.hero.flap();
-      GameProps.hero.isDead = true;
-    }
+  update() {
+    this.#upper.translate(-1,0);
+    this.#lower.translate(-1,0);
   }
 
   get posX(){

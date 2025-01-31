@@ -42,8 +42,6 @@ export const GameProps = {
   ground: null,
   hero: null,
   obstacles: [],
-  baits: [],
-  menu: null,
 };
 
 //--------------- Functions ----------------------------------------------//
@@ -70,13 +68,9 @@ function loadGame() {
   GameProps.hero = new THero(spcvs, SpriteInfoList.hero1, pos);
 
   spawnObstacle();
-  spawnBait();
-
   requestAnimationFrame(drawGame);
   setInterval(animateGame, 10);
-
-  GameProps.menu = new TMenu(spcvs);
-}// end of loadGame
+}
 
 function drawGame() {
   spcvs.clearCanvas();
@@ -96,78 +90,32 @@ function drawObstacles() {
   }
 }
 
-function drawBait() {
-  for (let i = 0; i < GameProps.baits.length; i++) {
-    const bait = GameProps.baits[i];
-    bait.draw();
+function animateGame(){
+  GameProps.ground.translate(-GameProps.speed, 0);
+  if(GameProps.ground.posX <= -SpriteInfoList.background.width){
+    GameProps.ground.posX = 0;
+  }
+  GameProps.hero.update();
+  let delObstacleIndex = -1;
+  for(let i = 0; i < GameProps.obstacles.length; i++){
+    const obstacle = GameProps.obstacles[i];
+    obstacle.update();
+    if(obstacle.posX < -100){
+      delObstacleIndex = i;
+    }
+  }
+  if(delObstacleIndex >= 0){
+    GameProps.obstacles.splice(delObstacleIndex, 1);
   }
 }
 
-function animateGame() {
-  switch (GameProps.status) {
-    case EGameStatus.playing:
-      if (GameProps.hero.isDead) {
-        GameProps.hero.animateSpeed = 0;
-        GameProps.hero.update();
-        return;
-      }
-      GameProps.ground.translate(-GameProps.speed, 0); // Gi retning til ground mot minus X retning, altså venstre
-      if (GameProps.ground.posX <= -SpriteInfoList.background.width) { // Bevege ground
-        GameProps.ground.posX = 0;
-      }
-      GameProps.hero.update();
-      let delObstacleIndex = -1;
-      for (let i = 0; i < GameProps.obstacles.length; i++) {
-        const obstacle = GameProps.obstacles[i];
-        obstacle.update();
-        if (obstacle.posX < -100) {
-          delObstacleIndex = i;
-        }
-      }
-      if (delObstacleIndex >= 0) {
-        GameProps.obstacles.splice(delObstacleIndex, 1);
-      }
-    case EGameStatus.gameOver:
-      let delBaitIndex = -1;
-      const posHero = GameProps.hero.getCenter();
-      for (let i = 0; i < GameProps.baits.length; i++) {
-        const bait = GameProps.baits[i];
-        bait.update();
-        const posBait = bait.getCenter();
-        const dist = posHero.distanceToPoint(posBait);
-        if (dist < 15) {
-          delBaitIndex = i;
-        }
-      }
-      if (delBaitIndex >= 0) {
-        GameProps.baits.splice(delBaitIndex, 1);
-      }
-      break;
-      case EGameStatus.idle:
-        GameProps.hero.updateIdle();
-        break;
-  }
-}
-
-function spawnObstacle() {
+function spawnObstacle(){
   const obstacle = new TObstacle(spcvs, SpriteInfoList.obstacle);
   GameProps.obstacles.push(obstacle);
   //Spawn a new obstacle in 2-7 seconds
-  if (GameProps.status === EGameStatus.playing) {
-    const seconds = Math.ceil(Math.random() * 5) + 2;
-    setTimeout(spawnObstacle, seconds * 1000);
-  }
-}
-
-function spawnBait() {
-  const pos = new lib2d.TPosition(SpriteInfoList.background.width, 100);
-  const bait = new TBait(spcvs, SpriteInfoList.food, pos);
-  GameProps.baits.push(bait);
-  //Generer nye baits hvert 0.5 til 1 sekund med step på 0.1
-  if (GameProps.status === EGameStatus.playing) {
-    const sec = Math.ceil(Math.random() * 5) / 10 + 0.5;
-    setTimeout(spawnBait, sec * 1000);
-  }
+  const seconds = Math.ceil(Math.random() * 5) +2;
+  setTimeout(spawnObstacle, seconds * 1000);
+  console.log("Obstacles spawned in " + seconds + " seconds");
 }
 
 //--------------- Event Handlers -----------------------------------------//

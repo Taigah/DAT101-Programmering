@@ -34,20 +34,9 @@ class TSpriteCanvas {
     const dy = aDy;
     const dw = sw;
     const dh = sh;
-    if(aRot !== 0){
-      //Hvis vi har rotasjon må vi flytte mitten av destinasjonen til 0,0
-      const cx = dx + dw / 2;
-      const cy = dy + dh / 2;
-      const rad = aRot * Math.PI / 180;
-      this.#ctx.translate(cx, cy);
-      this.#ctx.rotate(rad);
-      this.#ctx.drawImage(this.#img, sx, sy, sw, sh, -dw / 2, -dh / 2, dw, dh);
-      this.#ctx.rotate(-rad);
-      this.#ctx.translate(-cx, -cy);
-    }else{
-      this.#ctx.drawImage(this.#img, sx, sy, sw, sh, dx, dy, dw, dh);
-    }
+    this.#ctx.drawImage(this.#img, sx, sy, sw, sh, dx, dy, dw, dh);
   }
+
 
   clearCanvas() {
     this.#ctx.clearRect(0, 0, this.#cvs.width, this.#cvs.height);
@@ -117,6 +106,14 @@ class TSprite {
 
   get posY() {
     return this.#pos.y;
+  }
+
+  get left(){
+    return this.#pos.x;
+  }
+
+  get right(){
+    return this.#pos.x + this.#spi.width;
   }
 
   set posX(aX) {
