@@ -34,9 +34,27 @@ class TSpriteCanvas {
     const dy = aDy;
     const dw = sw;
     const dh = sh;
-    this.#ctx.drawImage(this.#img, sx, sy, sw, sh, dx, dy, dw, dh);
-  }
+    if(aRot !== 0){
+      //Hvis vi har rotasjon må vi flytte mitten av destinasjonen til 0,0
+      const cx = dx + dw / 2;
+      const cy = dy + dh / 2;
+      const rad = aRot * Math.PI / 180;
+      this.#ctx.translate(cx, cy);
+      this.#ctx.rotate(rad);
+      this.#ctx.drawImage(this.#img, sx, sy, sw, sh, -dw / 2, -dh / 2, dw, dh);
+      this.#ctx.rotate(-rad);
+      this.#ctx.translate(-cx, -cy);
+    }else{
+      this.#ctx.drawImage(this.#img, sx, sy, sw, sh, dx, dy, dw, dh);
+    }
+  } // End of drawSprite
 
+  drawText(aText, aPos){
+    this.#ctx.font = "25px Arial";
+    this.#ctx.fillStyle = "#333333";
+    this.#ctx.textAlign = "right";
+    this.#ctx.fillText(aText, aPos.x, aPos.y);
+  }
 
   clearCanvas() {
     this.#ctx.clearRect(0, 0, this.#cvs.width, this.#cvs.height);

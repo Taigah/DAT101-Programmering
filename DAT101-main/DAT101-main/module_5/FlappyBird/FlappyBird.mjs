@@ -14,7 +14,7 @@ const cvs = document.getElementById("cvs");
 const spcvs = new libSprite.TSpriteCanvas(cvs);
 
 // prettier-ignore
-export const SpriteInfoList = { // pixel info til sprites
+export const SpriteInfoList = {
   hero1:        { x:    0, y: 545, width:   34, height:  24, count:  4 },
   hero2:        { x:    0, y: 569, width:   34, height:  24, count:  4 },
   hero3:        { x:    0, y: 593, width:   34, height:  24, count:  4 },
@@ -31,7 +31,7 @@ export const SpriteInfoList = { // pixel info til sprites
   medal:        { x:  985, y: 635, width:   44, height:  44, count:  4 },
 };
 
-export const EGameStatus = { idle: 0, getReady: 1, playing: 2, gameOver: 3 }; // Ulike "faser" spillet kan være i
+export const EGameStatus = { idle: 0, getReady: 1, playing: 2, gameOver: 3 };
 
 export const GameProps = {
   soundMuted: false,
@@ -42,11 +42,16 @@ export const GameProps = {
   ground: null,
   hero: null,
   obstacles: [],
+  baits: [],
+  menu: null,
+  score: 0,
+  bestScore: 0,
+  sounds: {countDown: null, food: null, gameOver: null, dead: null, running: null},
 };
 
 //--------------- Functions ----------------------------------------------//
 
-function playSound(aSound) { // Sjekker om lyden er muted eller ikke og spiller av lyden
+function playSound(aSound) {
   if (!GameProps.soundMuted) {
     aSound.play();
   } else {
@@ -54,7 +59,7 @@ function playSound(aSound) { // Sjekker om lyden er muted eller ikke og spiller 
   }
 }
 
-function loadGame() { // Laster inn canvaset og alle spirtes for spillet
+function loadGame() {
   console.log("Game ready to load");
   cvs.width = SpriteInfoList.background.width;
   cvs.height = SpriteInfoList.background.height;
@@ -67,12 +72,16 @@ function loadGame() { // Laster inn canvaset og alle spirtes for spillet
   pos.y = 100;
   GameProps.hero = new THero(spcvs, SpriteInfoList.hero1, pos);
 
-  spawnObstacle(); // Spawner inn objects
+  GameProps.menu = new TMenu(spcvs);
+
+  //Load sounds
+  GameProps.sounds.running = new libSound.TSoundFile("./Media/running.mp3");
+
   requestAnimationFrame(drawGame);
   setInterval(animateGame, 10);
-}
+}// end of loadGame
 
-function drawGame() { // 
+function drawGame() {
   spcvs.clearCanvas();
   GameProps.background.draw();
   drawBait();
@@ -90,32 +99,100 @@ function drawObstacles() {
   }
 }
 
-function animateGame(){
-  GameProps.ground.translate(-GameProps.speed, 0);
-  if(GameProps.ground.posX <= -SpriteInfoList.background.width){
-    GameProps.ground.posX = 0;
-  }
-  GameProps.hero.update();
-  let delObstacleIndex = -1;
-  for(let i = 0; i < GameProps.obstacles.length; i++){
-    const obstacle = GameProps.obstacles[i];
-    obstacle.update();
-    if(obstacle.posX < -100){
-      delObstacleIndex = i;
-    }
-  }
-  if(delObstacleIndex >= 0){
-    GameProps.obstacles.splice(delObstacleIndex, 1);
+function drawBait() {
+  for (let i = 0; i < GameProps.baits.length; i++) {
+    const bait = GameProps.baits[i];
+    bait.draw();
   }
 }
 
-function spawnObstacle(){
+function animateGame() {
+  switch (GameProps.status) {
+    case EGameStatus.playing:
+      if (GameProps.hero.isDead) {
+        GameProps.hero.animateSpeed = 0;
+        GameProps.hero.update();
+        return;
+      }
+      GameProps.ground.translate(-GameProps.speed, 0);
+      if (GameProps.ground.posX <= -SpriteInfoList.background.width) {
+        GameProps.ground.posX = 0;
+      }
+      GameProps.hero.update();
+      let delObstacleIndex = -1;
+      
+      for (let i = 0; i < GameProps.obstacles.length; i++) {
+        const obstacle = GameProps.obstacles[i];
+        obstacle.update();
+        if(obstacle.right < GameProps.hero.left && !obstacle.hasPassed) {
+          //Congratulations, you have passed the obstacle
+          GameProps.menu.incScore(20);
+          console.log("Score: " + GameProps.score);
+          obstacle.hasPassed = true;
+        }
+        if (obstacle.posX < -100) {
+          delObstacleIndex = i;
+        }
+      }
+      if (delObstacleIndex >= 0) {
+        GameProps.obstacles.splice(delObstacleIndex, 1);
+      }
+    case EGameStatus.gameOver:
+      let delBaitIndex = -1;
+      const posHero = GameProps.hero.getCenter();
+      for (let i = 0; i < GameProps.baits.length; i++) {
+        const bait = GameProps.baits[i];
+        bait.update();
+        const posBait = bait.getCenter();
+        const dist = posHero.distanceToPoint(posBait);
+        if (dist < 15) {
+          delBaitIndex = i;
+        }
+      }
+      if (delBaitIndex >= 0) {
+        GameProps.baits.splice(delBaitIndex, 1);
+        GameProps.menu.incScore(10);
+      }
+      break;
+      case EGameStatus.idle:
+        GameProps.hero.updateIdle();
+        break;
+  }
+}
+
+function spawnObstacle() {
   const obstacle = new TObstacle(spcvs, SpriteInfoList.obstacle);
   GameProps.obstacles.push(obstacle);
   //Spawn a new obstacle in 2-7 seconds
-  const seconds = Math.ceil(Math.random() * 5) +2;
-  setTimeout(spawnObstacle, seconds * 1000);
-  console.log("Obstacles spawned in " + seconds + " seconds");
+  if (GameProps.status === EGameStatus.playing) {
+    const seconds = Math.ceil(Math.random() * 5) + 2;
+    setTimeout(spawnObstacle, seconds * 1000);
+  }
+}
+
+function spawnBait() {
+  const pos = new lib2d.TPosition(SpriteInfoList.background.width, 100);
+  const bait = new TBait(spcvs, SpriteInfoList.food, pos);
+  GameProps.baits.push(bait);
+  //Generer nye baits hvert 0.5 til 1 sekund med step på 0.1
+  if (GameProps.status === EGameStatus.playing) {
+    const sec = Math.ceil(Math.random() * 5) / 10 + 0.5;
+    setTimeout(spawnBait, sec * 1000);
+  }
+}
+
+export function startGame() {
+  GameProps.status = EGameStatus.playing;
+  //Helten er død, vi må lage en ny helt!
+  GameProps.hero = new THero(spcvs, SpriteInfoList.hero1, new lib2d.TPosition(100, 100));
+  //Vi må slette alle hindringer og baits
+  GameProps.obstacles = [];
+  GameProps.baits = [];
+  GameProps.menu.reset();
+  spawnObstacle();
+  spawnBait();
+  //Spill av lyd
+  GameProps.sounds.running.play();
 }
 
 //--------------- Event Handlers -----------------------------------------//
