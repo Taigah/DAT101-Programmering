@@ -1,6 +1,7 @@
 "use strict";
 //--------------- Objects and Variables ----------------------------------//
 import lib2d from "../../common/libs/lib2d_v2.mjs";
+import libSound from "../../common/libs/libSound.mjs";
 import libSprite from "../../common/libs/libSprite_v2.mjs";
 import { TColorButton } from "./colorButton.mjs";
 
@@ -24,6 +25,7 @@ export const gameProps = {
   Background: new libSprite.TSprite(spcvs, SpriteInfoList.Background, new lib2d.TPoint(0, 0)),
   GameCenter: new lib2d.TPosition(SpriteInfoList.Background.width / 2, SpriteInfoList.Background.height / 2),
   Status: EGameStatusType.Computer,
+  Status: EGameStatusType.Computer,
   //prettier-ignore
   ColorButtons: [
     new TColorButton(spcvs, SpriteInfoList.ButtonYellow),
@@ -33,15 +35,40 @@ export const gameProps = {
   sequence: [],
   seqIndex: 0, //Hvilken knapp i sekvensen vi er på
   activeButton: null,//Ingen knapp er aktiv i starten
+  buttonStartEnd: new libSprite.TSpriteButton(
+    spcvs,
+    SpriteInfoList.ButtonStartEnd,
+    SpriteInfoList.ButtonStartEnd.dst,
+    lib2d.TCircle
+  ),
+  GameSpeed: 800,
+  spnRound: new libSprite.TSpriteNumber(
+    spcvs, 
+    SpriteInfoList.number,
+    SpriteInfoList.number.dst),
 };
 
 //--------------- Functions ----------------------------------------------//
 function loadGame() {
   cvs.width = gameProps.Background.width;
   cvs.height = gameProps.Background.height;
-  gameProps.sequence.push(gameProps.ColorButtons[0]); //Simulerer at vi har en sekvens
-  spawnSequence();
+  gameProps.buttonStartEnd.onClick = startGame;
+  setDisabledButtons(true);
   drawGame();
+}
+
+function startGame(){
+  gameProps.buttonStartEnd.visible = false;
+  libSound.activateAudioContext();
+  gameProps.ColorButtons[0].sound = new libSound.TSoundWave(4, "C", "sine");
+  gameProps.ColorButtons[1].sound = new libSound.TSoundWave(4, "D", "sine");
+  gameProps.ColorButtons[2].sound = new libSound.TSoundWave(4, "E", "sine");
+  gameProps.ColorButtons[3].sound = new libSound.TSoundWave(4, "F", "sine");
+  gameProps.sequence.push(gameProps.ColorButtons[0]); //Simulerer at vi har en sekvens
+  gameProps.sequence = [];
+  gameProps.GameSpeed = 800;
+  gameProps.spnRound.value = 0; // Vi starter alltid på runde 0
+  spawnSequence();
 }
 
 function drawGame() {
@@ -52,12 +79,20 @@ function drawGame() {
   for (let i = 0; i < gameProps.ColorButtons.length; i++){
     gameProps.ColorButtons[i].draw();
   }
+  gameProps.spnRound.draw();
+  gameProps.buttonStartEnd.draw();
   requestAnimationFrame(drawGame);
+}
+
+function setDisabledButtons(aDisabled){
+  for(let i = 0; i < gameProps.ColorButtons.length; i++){
+    gameProps.ColorButtons[i].disable = aDisabled;
+  }
 }
 
 function setMouseDown(){
   gameProps.activeButton.onMouseDown();
-  setTimeout(setMouseUp, 1000);
+  setTimeout(setMouseUp, gameProps.GameSpeed);
 }
 
 function setMouseUp(){
@@ -74,20 +109,36 @@ function setMouseUp(){
   }
   gameProps.activeButton = gameProps.sequence[gameProps.seqIndex];
   if(!done){
-    setTimeout(setMouseDown, 1000);
+    setTimeout(setMouseDown, 100);
   }else{
     gameProps.Status = EGameStatusType.Player; //Nå venter vi på at spilleren skal trykke på knappene
+    setDisabledButtons(false);
   }
 }
 
-function spawnSequence(){
+let countSpawn = 0;
+
+export function spawnSequence(){
  const index = Math.floor(Math.random() * gameProps.ColorButtons.length);
  const button = gameProps.ColorButtons[index];
  gameProps.sequence.push(button);
  gameProps.seqIndex = 0;
  gameProps.activeButton = gameProps.sequence[0];
  gameProps.Status = EGameStatusType.Computer;
- setTimeout(setMouseDown, 1000);
+
+ /*
+ Her skal dere erstatte alle 1000 med en variabel som heter gameProps.GameSpeed
+ Start med 800 og reduser emd 50 for hver runde, det laveste skal vare 100, husk at dette er millisekunder
+ */
+
+ setTimeout(setMouseDown, gameProps.GameSpeed);
+ if(gameProps.GameSpeed > 200){
+  gameProps.GameSpeed -= 100;
+ }else{
+  gameProps.GameSpeed = 120;
+ }
+
+ console.log(countSpawn++, gameProps.GameSpeed);
 }
 //--------------- Event Handlers -----------------------------------------//
 
