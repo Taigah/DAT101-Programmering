@@ -136,6 +136,7 @@ export class TMenu {
       GameProps.status = EGameStatus.getReady;
       this.#spcvs.style.cursor = "default";
       setTimeout(this.#onCountDown, 1000);
+      GameProps.sounds.countDown.play();
     }
   };
 

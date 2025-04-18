@@ -3,7 +3,7 @@ import lib2d from "../../common/libs/lib2d.mjs";
 import libSprite from "../../common/libs/libSprite.mjs";
 import { GameProps, EGameStatus } from "./FlappyBird.mjs";
 
-class THero extends libSprite.TSprite {
+class THero extends libSprite.TSprite { //extends er for å dele/arve properties mellom to classes
   #spi;
   #gravity = 9.81 / 100;
   #velocity = 0;
@@ -21,7 +21,7 @@ class THero extends libSprite.TSprite {
     super.draw();
   }
 
-  update() {
+  update() { //!TODO spørre hvordan denne fungerer. Stopper spillet om posijonen til hero treffer hero så slutter spillet
     const groundY = GameProps.ground.posY;
     const bottomY = this.posY + this.#spi.height;
     if (bottomY < groundY) {
@@ -37,6 +37,8 @@ class THero extends libSprite.TSprite {
       GameProps.status = EGameStatus.gameOver;
       this.animateSpeed = 0;
       GameProps.sounds.running.stop();
+      GameProps.sounds.countDown.stop();
+      GameProps.sounds.food.stop();
     }
   }
 

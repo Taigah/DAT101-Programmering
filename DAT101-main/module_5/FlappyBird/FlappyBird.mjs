@@ -35,7 +35,7 @@ export const EGameStatus = { idle: 0, getReady: 1, playing: 2, gameOver: 3 };
 
 export const GameProps = {
   soundMuted: false,
-  dayTime: true,
+  dayTime: true,  // Trenger funksjon for å bytte til natt
   speed: 1,
   status: EGameStatus.idle, //For testing, normally EGameStatus.idle
   background: null,
@@ -51,7 +51,7 @@ export const GameProps = {
 
 //--------------- Functions ----------------------------------------------//
 
-function playSound(aSound) {
+function playSound(aSound) { // !TODO funksjonen blir ikke brukt, mute knappen funker ikke som den skal
   if (!GameProps.soundMuted) {
     aSound.play();
   } else {
@@ -76,6 +76,12 @@ function loadGame() {
 
   //Load sounds
   GameProps.sounds.running = new libSound.TSoundFile("./Media/running.mp3");
+  GameProps.sounds.running.setVolume?.(0.4);
+  GameProps.sounds.dead = new libSound.TSoundFile("./Media/heroIsDead.mp3");
+  GameProps.sounds.gameOver = new libSound.TSoundFile("./Media/gameOver.mp3");
+  GameProps.sounds.food = new libSound.TSoundFile("./Media/food.mp3");
+  GameProps.sounds.countDown = new libSound.TSoundFile("./Media/countDown.mp3");
+  GameProps.sounds.flap = new libSound.TSoundFile("./Media/wingFlap.mp3");
 
   requestAnimationFrame(drawGame);
   setInterval(animateGame, 10);
@@ -92,7 +98,7 @@ function drawGame() {
   requestAnimationFrame(drawGame);
 }
 
-function drawObstacles() {
+function drawObstacles() { // Loop for å lage uendelig med obstacles så lenge spillet kjører.
   for (let i = 0; i < GameProps.obstacles.length; i++) {
     const obstacle = GameProps.obstacles[i];
     obstacle.draw();
@@ -109,18 +115,13 @@ function drawBait() {
 function animateGame() {
   switch (GameProps.status) {
     case EGameStatus.playing:
-      if (GameProps.hero.isDead) {
-        GameProps.hero.animateSpeed = 0;
-        GameProps.hero.update();
-        return;
-      }
-      GameProps.ground.translate(-GameProps.speed, 0);
+      GameProps.ground.translate(-GameProps.speed, 0); // Looper bakgrunnen
       if (GameProps.ground.posX <= -SpriteInfoList.background.width) {
         GameProps.ground.posX = 0;
       }
+      
       GameProps.hero.update();
       let delObstacleIndex = -1;
-      
       for (let i = 0; i < GameProps.obstacles.length; i++) {
         const obstacle = GameProps.obstacles[i];
         obstacle.update();
@@ -134,10 +135,9 @@ function animateGame() {
           delObstacleIndex = i;
         }
       }
-      if (delObstacleIndex >= 0) {
+      if (delObstacleIndex >= 0) { // Fjerner obstacles når de har passert 100 X kordinater til venstre for spillet
         GameProps.obstacles.splice(delObstacleIndex, 1);
       }
-    case EGameStatus.gameOver:
       let delBaitIndex = -1;
       const posHero = GameProps.hero.getCenter();
       for (let i = 0; i < GameProps.baits.length; i++) {
@@ -145,18 +145,26 @@ function animateGame() {
         bait.update();
         const posBait = bait.getCenter();
         const dist = posHero.distanceToPoint(posBait);
-        if (dist < 15) {
+        if (dist < 20) { // !TODO Spiser baits om de er innenfor en vis distane fra hero. Burde dette være i game playing case?
           delBaitIndex = i;
+          GameProps.sounds.food.play();
         }
       }
       if (delBaitIndex >= 0) {
         GameProps.baits.splice(delBaitIndex, 1);
         GameProps.menu.incScore(10);
       }
+    case EGameStatus.gameOver:
+      if (GameProps.hero.isDead) { // !TODO flytte til gameover case?
+        GameProps.hero.animateSpeed = 0;
+        GameProps.hero.update();
+        GameProps.sounds.gameOver.play();
+        return;
+      }
       break;
-      case EGameStatus.idle:
-        GameProps.hero.updateIdle();
-        break;
+    case EGameStatus.idle:
+      GameProps.hero.updateIdle();
+      break;
   }
 }
 
@@ -167,7 +175,7 @@ function spawnObstacle() {
   if (GameProps.status === EGameStatus.playing) {
     const seconds = Math.ceil(Math.random() * 5) + 2;
     setTimeout(spawnObstacle, seconds * 1000);
-  }
+  } 
 }
 
 function spawnBait() {
@@ -181,7 +189,7 @@ function spawnBait() {
   }
 }
 
-export function startGame() {
+export function startGame() { //Legge til noe for å fjerne obstacles fra forrige spill?
   GameProps.status = EGameStatus.playing;
   //The hero is dead, so we must create a new hero
   GameProps.hero = new THero(spcvs, SpriteInfoList.hero1, new lib2d.TPosition(100, 100));
@@ -189,10 +197,12 @@ export function startGame() {
   GameProps.obstacles = [];
   GameProps.baits = [];
   GameProps.menu.reset();
+  //!TODO Legge til clearCanvas() her?
   spawnObstacle();
   spawnBait();
   //Play the running sound
   GameProps.sounds.running.play();
+  GameProps.sounds.countDown.play();
 }
 
 //--------------- Event Handlers -----------------------------------------//
@@ -207,7 +217,7 @@ function setSoundOnOff() {
   }
 } // end of setSoundOnOff
 
-function setDayNight() {
+function setDayNight() { //!TODO Funker ikke, mulig man må endre daytime i gameprops lenger oppe
   if (rbDayNight[0].checked) {
     GameProps.dayTime = true;
     console.log("Day time");
@@ -217,15 +227,24 @@ function setDayNight() {
   }
 } // end of setDayNight
 
+function replayFlap() {
+  const flap = GameProps.sounds.flap.audio;
+  const overlap = flap.cloneNode();
+  overlap.play();
+}
+
 function onKeyDown(aEvent) {
   switch (aEvent.code) {
     case "Space":
       if (!GameProps.hero.isDead) {
         GameProps.hero.flap();
+        replayFlap();
       }
       break;
   }
 }
+
+
 
 //--------------- Main Code ----------------------------------------------//
 chkMuteSound.addEventListener("change", setSoundOnOff);
