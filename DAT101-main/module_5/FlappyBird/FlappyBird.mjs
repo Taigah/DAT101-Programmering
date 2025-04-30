@@ -85,6 +85,13 @@ function loadGame() {
 
   requestAnimationFrame(drawGame);
   setInterval(animateGame, 10);
+
+  window.addEventListener("baitEaten", (e) => {
+    const index = e.detail.index;
+    const sound = GameProps.sounds.food;
+    sound.currentTime = 0;
+    sound.play();
+  })
 }// end of loadGame
 
 function drawGame() {
@@ -254,3 +261,14 @@ rbDayNight[1].addEventListener("change", setDayNight);
 // Load the sprite sheet
 spcvs.loadSpriteSheet("./Media/FlappyBirdSprites.png", loadGame);
 document.addEventListener("keydown", onKeyDown);
+
+
+// 1. Bait lyd spilles bare av en gang
+// 2. Kræsj lyd spilles ikke av
+// 3. Game over lyd spilles ikke av
+// 4. Flapping lyd spilles ikke av
+// 5. Dag og nat
+// 6. Mute knapp?
+
+// Virker som vi må finne en måte å gjenta lyder på mer enn en gang
+
