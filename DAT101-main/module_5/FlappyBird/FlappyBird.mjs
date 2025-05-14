@@ -13,7 +13,6 @@ const rbDayNight = document.getElementsByName("rbDayNight");
 const cvs = document.getElementById("cvs");
 const spcvs = new libSprite.TSpriteCanvas(cvs);
 
-// prettier-ignore
 export const SpriteInfoList = {
   hero1:        { x:    0, y: 545, width:   34, height:  24, count:  4 },
   hero2:        { x:    0, y: 569, width:   34, height:  24, count:  4 },
@@ -35,9 +34,11 @@ export const EGameStatus = { idle: 0, getReady: 1, playing: 2, gameOver: 3 };
 
 export const GameProps = {
   soundMuted: false,
-  dayTime: true,  // Trenger funksjon for å bytte til natt
+  dayTime: true,
   speed: 1,
-  status: EGameStatus.idle, //For testing, normally EGameStatus.idle
+  status: EGameStatus.idle,
+  prevIsDead: false,
+  soundPlayed: false, // track if game-over tune has played
   background: null,
   ground: null,
   hero: null,
@@ -46,17 +47,27 @@ export const GameProps = {
   menu: null,
   score: 0,
   bestScore: 0,
-  sounds: {countDown: null, food: null, gameOver: null, dead: null, running: null},
+  sounds: { countDown: null, food: null, gameOver: null, dead: null, running: null, flap: null },
 };
 
 //--------------- Functions ----------------------------------------------//
 
-function playSound(aSound) { // !TODO funksjonen blir ikke brukt, mute knappen funker ikke som den skal
-  if (!GameProps.soundMuted) {
-    aSound.play();
+/**
+ * Plays a sound, cloning the audio element for overlapping playback.
+ */
+function playSound(source) {
+  if (GameProps.soundMuted || !source) return;
+  const audioElem = source.audio || source;
+  let clip;
+  if (typeof audioElem.cloneNode === "function") {
+    clip = audioElem.cloneNode(); // clone for overlap
+    clip.volume = audioElem.volume;
   } else {
-    aSound.pause();
+    clip = audioElem;
+    clip.currentTime = 0;
   }
+  clip.currentTime = 0;
+  clip.play();
 }
 
 function loadGame() {
@@ -68,34 +79,36 @@ function loadGame() {
   GameProps.background = new libSprite.TSprite(spcvs, SpriteInfoList.background, pos);
   pos.y = cvs.height - SpriteInfoList.ground.height;
   GameProps.ground = new libSprite.TSprite(spcvs, SpriteInfoList.ground, pos);
-  pos.x = 100;
-  pos.y = 100;
+  pos = new lib2d.TPosition(100, 100);
   GameProps.hero = new THero(spcvs, SpriteInfoList.hero1, pos);
 
   GameProps.menu = new TMenu(spcvs);
 
-  //Load sounds
-  GameProps.sounds.running = new libSound.TSoundFile("./Media/running.mp3");
-  GameProps.sounds.running.setVolume?.(0.4);
-  GameProps.sounds.dead = new libSound.TSoundFile("./Media/heroIsDead.mp3");
-  GameProps.sounds.gameOver = new libSound.TSoundFile("./Media/gameOver.mp3");
-  GameProps.sounds.food = new libSound.TSoundFile("./Media/food.mp3");
-  GameProps.sounds.countDown = new libSound.TSoundFile("./Media/countDown.mp3");
-  GameProps.sounds.flap = new libSound.TSoundFile("./Media/wingFlap.mp3");
+  // Load sounds (using Audio for dead and gameOver for overlap support)
+  const S = GameProps.sounds;
+  S.running = new libSound.TSoundFile("./Media/running.mp3");
+  S.running.setVolume?.(0.4);
+  S.countDown = new libSound.TSoundFile("./Media/countDown.mp3");
+  S.flap = new Audio("./Media/wingFlap.mp3");
+  S.flap.volume = 0.4;
+  S.food = new Audio("./Media/food.mp3");
+  S.food.volume = 0.6;
+  // Use HTMLAudioElement for death & game-over to ensure cloneNode support
+  S.dead = new Audio("./Media/heroIsDead.mp3");
+  S.dead.volume = 0.8;
+  S.gameOver = new Audio("./Media/gameOver.mp3");
+  S.gameOver.volume = 0.8;
 
   requestAnimationFrame(drawGame);
-  setInterval(animateGame, 10);
-
-  window.addEventListener("baitEaten", (e) => {
-    const index = e.detail.index;
-    const sound = GameProps.sounds.food;
-    sound.currentTime = 0;
-    sound.play();
-  })
-}// end of loadGame
+  setInterval(animateGame, 1000 / 60);
+  window.addEventListener("baitEaten", () => playSound(GameProps.sounds.food));
+}
 
 function drawGame() {
   spcvs.clearCanvas();
+  if (GameProps.background.setFrame) {
+    GameProps.background.setFrame(GameProps.dayTime ? 0 : 1);
+  }
   GameProps.background.draw();
   drawBait();
   drawObstacles();
@@ -105,170 +118,126 @@ function drawGame() {
   requestAnimationFrame(drawGame);
 }
 
-function drawObstacles() { // Loop for å lage uendelig med obstacles så lenge spillet kjører.
-  for (let i = 0; i < GameProps.obstacles.length; i++) {
-    const obstacle = GameProps.obstacles[i];
-    obstacle.draw();
-  }
+function drawObstacles() {
+  GameProps.obstacles.forEach((o) => o.draw());
 }
-
 function drawBait() {
-  for (let i = 0; i < GameProps.baits.length; i++) {
-    const bait = GameProps.baits[i];
-    bait.draw();
-  }
+  GameProps.baits.forEach((b) => b.draw());
 }
 
 function animateGame() {
   switch (GameProps.status) {
     case EGameStatus.playing:
-      GameProps.ground.translate(-GameProps.speed, 0); // Looper bakgrunnen
-      if (GameProps.ground.posX <= -SpriteInfoList.background.width) {
-        GameProps.ground.posX = 0;
-      }
-      
+      GameProps.ground.translate(-GameProps.speed, 0);
+      if (GameProps.ground.posX <= -SpriteInfoList.background.width) GameProps.ground.posX = 0;
       GameProps.hero.update();
-      let delObstacleIndex = -1;
-      for (let i = 0; i < GameProps.obstacles.length; i++) {
-        const obstacle = GameProps.obstacles[i];
-        obstacle.update();
-        if(obstacle.right < GameProps.hero.left && !obstacle.hasPassed) {
-          //Congratulations, you have passed the obstacle
+
+      // Death transition: trigger once
+      if (GameProps.hero.isDead && !GameProps.prevIsDead) {
+        // Play death sound immediately on collision
+        playSound(GameProps.sounds.dead);
+        // Switch to gameOver state
+        GameProps.status = EGameStatus.gameOver;
+        // Play a distinct game-over tune
+        playSound(GameProps.sounds.gameOver);
+      }
+      GameProps.prevIsDead = GameProps.hero.isDead;
+
+      // Obstacles update & scoring
+      GameProps.obstacles.forEach((ob) => {
+        ob.update();
+        if (ob.right < GameProps.hero.left && !ob.hasPassed) {
           GameProps.menu.incScore(20);
-          console.log("Score: " + GameProps.score);
-          obstacle.hasPassed = true;
+          ob.hasPassed = true;
         }
-        if (obstacle.posX < -100) {
-          delObstacleIndex = i;
-        }
-      }
-      if (delObstacleIndex >= 0) { // Fjerner obstacles når de har passert 100 X kordinater til venstre for spillet
-        GameProps.obstacles.splice(delObstacleIndex, 1);
-      }
-      let delBaitIndex = -1;
-      const posHero = GameProps.hero.getCenter();
-      for (let i = 0; i < GameProps.baits.length; i++) {
-        const bait = GameProps.baits[i];
+      });
+      GameProps.obstacles = GameProps.obstacles.filter((ob) => ob.posX >= -100);
+
+      // Baits update & scoring
+      const center = GameProps.hero.getCenter();
+      GameProps.baits.forEach((bait, i) => {
         bait.update();
-        const posBait = bait.getCenter();
-        const dist = posHero.distanceToPoint(posBait);
-        if (dist < 20) { // !TODO Spiser baits om de er innenfor en vis distane fra hero. Burde dette være i game playing case?
-          delBaitIndex = i;
-          GameProps.sounds.food.play();
+        if (center.distanceToPoint(bait.getCenter()) < 20) {
+          playSound(GameProps.sounds.food);
+          GameProps.menu.incScore(10);
+          GameProps.baits.splice(i, 1);
         }
-      }
-      if (delBaitIndex >= 0) {
-        GameProps.baits.splice(delBaitIndex, 1);
-        GameProps.menu.incScore(10);
-      }
+      });
+      break;
+
     case EGameStatus.gameOver:
-      if (GameProps.hero.isDead) { // !TODO flytte til gameover case?
-        GameProps.hero.animateSpeed = 0;
-        GameProps.hero.update();
-        GameProps.sounds.gameOver.play();
-        return;
+      // On game over, freeze the hero
+      GameProps.hero.animateSpeed = 0;
+      GameProps.hero.update();
+      // Play game-over tune once
+      if (!GameProps.soundPlayed) {
+        playSound(GameProps.sounds.gameOver);
+        GameProps.soundPlayed = true;
       }
       break;
+
     case EGameStatus.idle:
       GameProps.hero.updateIdle();
+      break;
+
+    case EGameStatus.getReady:
       break;
   }
 }
 
 function spawnObstacle() {
-  const obstacle = new TObstacle(spcvs, SpriteInfoList.obstacle);
-  GameProps.obstacles.push(obstacle);
-  //Spawn a new obstacle in 2-7 seconds
-  if (GameProps.status === EGameStatus.playing) {
-    const seconds = Math.ceil(Math.random() * 5) + 2;
-    setTimeout(spawnObstacle, seconds * 1000);
-  } 
+  if (GameProps.status !== EGameStatus.playing) return;
+  GameProps.obstacles.push(new TObstacle(spcvs, SpriteInfoList.obstacle));
+  setTimeout(spawnObstacle, Math.random() * 5000 + 2000);
 }
-
 function spawnBait() {
-  const pos = new lib2d.TPosition(SpriteInfoList.background.width, 100);
-  const bait = new TBait(spcvs, SpriteInfoList.food, pos);
-  GameProps.baits.push(bait);
-  //Generate a new bait in 0.5-1.5 seconds
-  if (GameProps.status === EGameStatus.playing) {
-    const sec = Math.ceil(Math.random() * 5) / 10 + 0.5;
-    setTimeout(spawnBait, sec * 1000);
-  }
+  if (GameProps.status !== EGameStatus.playing) return;
+  const p = new lib2d.TPosition(SpriteInfoList.background.width, Math.random() * (cvs.height - 200) + 100);
+  GameProps.baits.push(new TBait(spcvs, SpriteInfoList.food, p));
+  setTimeout(spawnBait, Math.random() * 1000 + 500);
 }
 
-export function startGame() { //Legge til noe for å fjerne obstacles fra forrige spill?
+export function startGame() {
+  // Reset flags for new play
+  GameProps.soundPlayed = false; // game over sound
+
   GameProps.status = EGameStatus.playing;
-  //The hero is dead, so we must create a new hero
+  GameProps.prevIsDead = false;
   GameProps.hero = new THero(spcvs, SpriteInfoList.hero1, new lib2d.TPosition(100, 100));
-  //We must reset the obstacles and baits
   GameProps.obstacles = [];
   GameProps.baits = [];
   GameProps.menu.reset();
-  //!TODO Legge til clearCanvas() her?
   spawnObstacle();
   spawnBait();
-  //Play the running sound
-  GameProps.sounds.running.play();
-  GameProps.sounds.countDown.play();
+  playSound(GameProps.sounds.running);
+  playSound(GameProps.sounds.countDown);
 }
 
 //--------------- Event Handlers -----------------------------------------//
-
 function setSoundOnOff() {
-  if (chkMuteSound.checked) {
-    GameProps.soundMuted = true;
-    console.log("Sound muted");
-  } else {
-    GameProps.soundMuted = false;
-    console.log("Sound on");
-  }
-} // end of setSoundOnOff
-
-function setDayNight() { //!TODO Funker ikke, mulig man må endre daytime i gameprops lenger oppe
+  GameProps.soundMuted = chkMuteSound.checked;
+  console.log(GameProps.soundMuted ? "Sound muted" : "Sound on");
+}
+export function setDayNight() {
   if (rbDayNight[0].checked) {
+    GameProps.background.index = 0;
+    GameProps.obstacles.forEach((o) => o.updateIndex(3, 2));
     GameProps.dayTime = true;
     console.log("Day time");
   } else {
     GameProps.dayTime = false;
+    GameProps.background.index = 1;
+    GameProps.obstacles.forEach((o) => o.updateIndex(1, 0));
     console.log("Night time");
   }
-} // end of setDayNight
-
-function replayFlap() {
-  const flap = GameProps.sounds.flap.audio;
-  const overlap = flap.cloneNode();
-  overlap.play();
 }
-
-function onKeyDown(aEvent) {
-  switch (aEvent.code) {
-    case "Space":
-      if (!GameProps.hero.isDead) {
-        GameProps.hero.flap();
-        replayFlap();
-      }
-      break;
+function onKeyDown(e) {
+  if (e.code === "Space" && !GameProps.hero.isDead) {
+    GameProps.hero.flap();
+    playSound(GameProps.sounds.flap);
   }
 }
-
-
-
-//--------------- Main Code ----------------------------------------------//
 chkMuteSound.addEventListener("change", setSoundOnOff);
-rbDayNight[0].addEventListener("change", setDayNight);
-rbDayNight[1].addEventListener("change", setDayNight);
-
-// Load the sprite sheet
+rbDayNight.forEach((rb) => rb.addEventListener("change", setDayNight));
 spcvs.loadSpriteSheet("./Media/FlappyBirdSprites.png", loadGame);
 document.addEventListener("keydown", onKeyDown);
-
-
-// 1. Bait lyd spilles bare av en gang
-// 2. Kræsj lyd spilles ikke av
-// 3. Game over lyd spilles ikke av
-// 4. Flapping lyd spilles ikke av
-// 5. Dag og nat
-// 6. Mute knapp?
-
-// Virker som vi må finne en måte å gjenta lyder på mer enn en gang
-
